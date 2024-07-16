@@ -1,0 +1,121 @@
+<html><head><base href="https://breadsmp.com"><title>BreadSMP - The Tastiest Minecraft Server</title><style>
+body {
+  font-family: 'Comic Sans MS', cursive;
+  background-color: #f5deb3;
+  color: #8b4513;
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  background-color: #d2691e;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  color: #ffebcd;
+  font-size: 3em;
+  margin: 0;
+}
+
+.navigation {
+  background-color: #deb887;
+  padding: 10px;
+  text-align: center;
+}
+
+.navigation a {
+  color: #8b4513;
+  text-decoration: none;
+  padding: 10px;
+  margin: 0 5px;
+  font-weight: bold;
+}
+
+.navigation a:hover {
+  background-color: #cd853f;
+  color: #fff8dc;
+}
+
+.content {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fffaf0;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(139, 69, 19, 0.3);
+}
+
+.bread-animation {
+  width: 100px;
+  height: 100px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.cta-button {
+  display: inline-block;
+  background-color: #ff4500;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.cta-button:hover {
+  background-color: #ff6347;
+}
+</style></head><body>
+  <div class="header">
+    <h1>BreadSMP</h1>
+    <p>The Tastiest Minecraft Server in the Multiverse!</p>
+  </div>
+
+  <div class="navigation">
+    <a href="#about">About</a>
+    <a href="#features">Features</a>
+    <a href="#join">Join Us</a>
+  </div>
+
+  <div class="content">
+    <!-- Content removed as requested -->
+  </div>
+
+  <img src="https://breadsmp.com/images/bread-logo.png" alt="Bread SMP Logo" class="bread-animation" width="100" height="100">
+
+  <script>
+    // Bread rain effect
+    function createBreadRain() {
+      const bread = document.createElement('div');
+      bread.innerHTML = '🍞';
+      bread.style.position = 'fixed';
+      bread.style.left = Math.random() * window.innerWidth + 'px';
+      bread.style.top = '-50px';
+      bread.style.fontSize = '30px';
+      bread.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      document.body.appendChild(bread);
+
+      let fall = setInterval(() => {
+        let top = parseInt(bread.style.top);
+        if (top > window.innerHeight) {
+          clearInterval(fall);
+          bread.remove();
+        } else {
+          bread.style.top = (top + 2) + 'px';
+        }
+      }, 20);
+    }
+
+    setInterval(createBreadRain, 500);
+  </script>
+</body></html>
