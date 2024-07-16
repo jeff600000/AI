@@ -1,0 +1,343 @@
+<html><head><base href="https://www.breadsmp.com"><title>Bread SMP | about</title><style>
+body {
+font-family: 'Comic Sans MS';
+  background-color: #f5deb3;
+  color: #8b4513;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.header {
+  background-color: #d2691e;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  color: #ffebcd;
+  font-size: 3em;
+  margin: 0;
+}
+
+.header p {
+  color: #ffebcd;
+  font-size: 1.2em;
+  margin-top: 10px;
+}
+
+.navigation {
+  background-color: #deb887;
+  padding: 10px;
+  text-align: center;
+}
+
+.navigation a {
+  color: #8b4513;
+  text-decoration: none;
+  padding: 10px;
+  margin: 0 5px;
+  font-weight: bold;
+}
+
+.navigation a:hover {
+  background-color: #cd853f;
+  color: #fff8dc;
+}
+
+.content {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fffaf0;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(139, 69, 19, 0.3);
+}
+
+.bread {
+  position: fixed;
+  font-size: 30px;
+  user-select: none;
+  cursor: pointer;
+}
+
+#score {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  color: #8b4513;
+  display: none;
+}
+
+#playerPaddle, #opponentPaddle {
+  position: fixed;
+  font-size: 30px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#playerPaddle {
+  bottom: 20px;
+}
+
+#opponentPaddle {
+  top: 20px;
+}
+
+#gameArea {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+</style></head><body>
+  <div class="header">
+    <h1>Bread SMP</h1>
+    <p>Fun Minecraft server</p>
+  </div>
+
+  <div class="navigation">
+    <a href="about">About</a>
+    <a href="#features">Features</a>
+    <a href="#join">Join Us</a>
+  </div>
+
+  <div class="content">
+    <h2>About</h2>
+    <p>breadsmp</p>
+  </div>
+
+  <div id="score">Player: 0 | Toast Master: 0</div>
+  <div id="gameArea">
+    <div id="playerPaddle"></div>
+    <div id="opponentPaddle"></div>
+  </div>
+
+  <script>
+  // Game logic and functionality
+  (function() {
+    let breadInterval = 500;
+    let activeBread = 0;
+    let gameActive = false;
+    let playerScore = 0;
+    let opponentScore = 0;
+
+    let playerPaddle = {
+      width: 150,
+      element: document.getElementById('playerPaddle')
+    };
+
+    let opponentPaddle = {
+      width: 150,
+      element: document.getElementById('opponentPaddle'),
+      targetX: 0,
+      speed: 18,
+      predictionError: 20,
+      reactionDelay: 50,
+      lastMoveTime: 0
+    };
+
+    let ball = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+      dx: 7,
+      dy: 7,
+      size: 30
+    };
+
+    function createBread() {
+      if (activeBread >= 20 || gameActive) return;
+      
+      const bread = document.createElement('div');
+      bread.innerHTML = '🍞';
+      bread.className = 'bread';
+      bread.style.left = Math.random() * window.innerWidth + 'px';
+      bread.style.top = '-50px';
+      bread.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      
+      bread.addEventListener('click', startPong);
+      
+      document.body.appendChild(bread);
+      activeBread++;
+
+      let fall = setInterval(() => {
+        if (gameActive) {
+          clearInterval(fall);
+          return;
+        }
+        let top = parseInt(bread.style.top);
+        if (top > window.innerHeight) {
+          clearInterval(fall);
+          bread.remove();
+          activeBread--;
+        } else {
+          bread.style.top = (top + 2) + 'px';
+        }
+      }, 20);
+    }
+
+    function startBreadRain() {
+      setInterval(createBread, breadInterval);
+    }
+
+    function startPong() {
+      gameActive = true;
+      playerScore = 0;
+      opponentScore = 0;
+      updateScore();
+
+      document.querySelectorAll('.bread').forEach(bread => bread.remove());
+      document.getElementById('gameArea').style.display = 'block';
+
+      resetBall();
+
+      playerPaddle.element.innerHTML = '🍞'.repeat(5);
+      opponentPaddle.element.innerHTML = '🍞'.repeat(5);
+
+      document.addEventListener('mousemove', movePlayerPaddle);
+      requestAnimationFrame(updateGame);
+    }
+
+    function movePlayerPaddle(e) {
+      let paddleRect = playerPaddle.element.getBoundingClientRect();
+      let newLeft = e.clientX - paddleRect.width / 2;
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - paddleRect.width));
+      playerPaddle.element.style.left = newLeft + 'px';
+    }
+
+    function predictBallPosition() {
+      let futureY = ball.y;
+      let futureX = ball.x;
+      let dy = ball.dy;
+      while (futureY > 0 && futureY < window.innerHeight) {
+        futureY += dy;
+        futureX += ball.dx;
+        if (futureX < 0 || futureX > window.innerWidth) {
+          futureX = Math.max(0, Math.min(futureX, window.innerWidth));
+        }
+      }
+      return futureX;
+    }
+
+    function updateOpponentPaddle() {
+      let now = Date.now();
+      if (now - opponentPaddle.lastMoveTime < opponentPaddle.reactionDelay) return;
+
+      let paddleRect = opponentPaddle.element.getBoundingClientRect();
+      let paddleCenter = paddleRect.left + paddleRect.width / 2;
+
+      opponentPaddle.targetX = predictBallPosition() + (Math.random() - 0.5) * opponentPaddle.predictionError;
+
+      let distance = opponentPaddle.targetX - paddleCenter;
+      let direction = Math.sign(distance);
+      let speed = Math.min(Math.abs(distance), opponentPaddle.speed);
+
+      let newLeft = paddleRect.left + direction * speed;
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - paddleRect.width));
+      opponentPaddle.element.style.left = newLeft + 'px';
+
+      opponentPaddle.lastMoveTime = now;
+    }
+
+    function updateGame() {
+      if (!gameActive) return;
+
+      updateOpponentPaddle();
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      if (ball.x < 0 || ball.x > window.innerWidth) {
+        ball.dx = -ball.dx;
+      }
+
+      let playerPaddleRect = playerPaddle.element.getBoundingClientRect();
+      let opponentPaddleRect = opponentPaddle.element.getBoundingClientRect();
+
+      if (ball.y + ball.size > playerPaddleRect.top &&
+          ball.y < playerPaddleRect.bottom &&
+          ball.x + ball.size > playerPaddleRect.left &&
+          ball.x < playerPaddleRect.right) {
+        ball.dy = -Math.abs(ball.dy);
+        let hitPosition = (ball.x - playerPaddleRect.left) / playerPaddleRect.width;
+        ball.dx = 10 * (hitPosition - 0.5);
+      }
+
+      if (ball.y < opponentPaddleRect.bottom &&
+          ball.y + ball.size > opponentPaddleRect.top &&
+          ball.x + ball.size > opponentPaddleRect.left &&
+          ball.x < opponentPaddleRect.right) {
+        ball.dy = Math.abs(ball.dy);
+        let hitPosition = (ball.x - opponentPaddleRect.left) / opponentPaddleRect.width;
+        ball.dx = 10 * (hitPosition - 0.5);
+      }
+
+      if (ball.y > window.innerHeight) {
+        opponentScore++;
+        resetBall();
+      }
+
+      if (ball.y < 0) {
+        playerScore++;
+        resetBall();
+      }
+
+      updateScore();
+
+      if (playerScore >= 21 || opponentScore >= 21) {
+        gameOver();
+        return;
+      }
+
+      document.querySelectorAll('.bread:not(#playerPaddle):not(#opponentPaddle)').forEach(bread => bread.remove());
+
+      const ballBread = document.createElement('div');
+      ballBread.innerHTML = '🍞';
+      ballBread.className = 'bread';
+      ballBread.style.left = ball.x + 'px';
+      ballBread.style.top = ball.y + 'px';
+      document.getElementById('gameArea').appendChild(ballBread);
+
+      requestAnimationFrame(updateGame);
+    }
+
+    function resetBall() {
+      ball.x = window.innerWidth / 2;
+      ball.y = window.innerHeight / 2;
+      ball.dx = 7 * (Math.random() > 0.5 ? 1 : -1);
+      ball.dy = 7 * (Math.random() > 0.5 ? 1 : -1);
+      
+      // Adjust opponent difficulty based on score difference
+      let scoreDifference = playerScore - opponentScore;
+      opponentPaddle.speed = Math.min(Math.max(15, 18 + scoreDifference * 0.2), 20);
+      opponentPaddle.predictionError = Math.max(10, 20 - scoreDifference * 1);
+      opponentPaddle.reactionDelay = Math.max(30, 50 - scoreDifference * 2);
+
+      // Increase ball speed as the game progresses
+      let totalScore = playerScore + opponentScore;
+      ball.dx *= 1 + (totalScore * 0.01);
+      ball.dy *= 1 + (totalScore * 0.01);
+    }
+
+    function updateScore() {
+      document.getElementById('score').style.display = 'block';
+      document.getElementById('score').textContent = `Player: ${playerScore} | Toast Master: ${opponentScore}`;
+    }
+
+    function gameOver() {
+      gameActive = false;
+      let winner = playerScore > opponentScore ? "Player" : "Toast Master";
+      setTimeout(() => {
+        alert(`Game Over! ${winner} wins with a score of ${Math.max(playerScore, opponentScore)}!`);
+        document.location.reload();
+      }, 100);
+    }
+
+    startBreadRain();
+  })();
+  </script>
+</body></html>
